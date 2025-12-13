@@ -10,56 +10,56 @@ var sw_msgs = '';
 var _paq = [];
 
 if ('serviceWorker' in navigator) {
-  // Delay registration until after the page has loaded, to ensure that our
-  // precaching requests don't degrade the first visit experience.
-  // See https://developers.google.com/web/fundamentals/instant-and-offline/service-worker/registration
-  window.addEventListener('load', function() {
-    // Your service-worker.js *must* be located at the top-level directory relative to your site.
-    // It won't be able to control pages unless it's located at the same level or higher than them.
-    // *Don't* register service worker file in, e.g., a scripts/ sub-directory!
-    // See https://github.com/slightlyoff/ServiceWorker/issues/468
-    navigator.serviceWorker.register('/sw.js').then(function(reg) {
-      // updatefound is fired if service-worker.js changes.
-      reg.onupdatefound = function() {
-        // The updatefound event implies that reg.installing is set; see
-        // https://w3c.github.io/ServiceWorker/#service-worker-registration-updatefound-event
-        let installingWorker = reg.installing;
+    // Delay registration until after the page has loaded, to ensure that our
+    // precaching requests don't degrade the first visit experience.
+    // See https://developers.google.com/web/fundamentals/instant-and-offline/service-worker/registration
+    window.addEventListener('load', function () {
+        // Your service-worker.js *must* be located at the top-level directory relative to your site.
+        // It won't be able to control pages unless it's located at the same level or higher than them.
+        // *Don't* register service worker file in, e.g., a scripts/ sub-directory!
+        // See https://github.com/slightlyoff/ServiceWorker/issues/468
+        navigator.serviceWorker.register('/sw.js').then(function (reg) {
+            // updatefound is fired if service-worker.js changes.
+            reg.onupdatefound = function () {
+                // The updatefound event implies that reg.installing is set; see
+                // https://w3c.github.io/ServiceWorker/#service-worker-registration-updatefound-event
+                let installingWorker = reg.installing;
 
-        installingWorker.onstatechange = function() {
-          switch (installingWorker.state) {
-            case 'installed':
-              if (navigator.serviceWorker.controller) {
-                // At this point, the old content will have been purged and the fresh content will
-                // have been added to the cache.
-                // It's the perfect time to display a "New content is available; please refresh."
-                // message in the page's interface.
-                sw_msgs = 'A new version is available.<br/>Refresh the page to update.';
-              } else {
-                // At this point, everything has been precached.
-                // It's the perfect time to display a "Content is cached for offline use." message.
-                sw_msgs = 'Content is cached for offline use';
-              }
-              try {
-                get_screen().getElementById("msgs").textContent = sw_msgs;
-                sw_msgs = '';
-              } catch (e) {}
-              break;
+                installingWorker.onstatechange = function () {
+                    switch (installingWorker.state) {
+                        case 'installed':
+                            if (navigator.serviceWorker.controller) {
+                                // At this point, the old content will have been purged and the fresh content will
+                                // have been added to the cache.
+                                // It's the perfect time to display a "New content is available; please refresh."
+                                // message in the page's interface.
+                                sw_msgs = 'A new version is available.<br/>Refresh the page to update.';
+                            } else {
+                                // At this point, everything has been precached.
+                                // It's the perfect time to display a "Content is cached for offline use." message.
+                                sw_msgs = 'Content is cached for offline use';
+                            }
+                            try {
+                                get_screen().getElementById("msgs").textContent = sw_msgs;
+                                sw_msgs = '';
+                            } catch (e) { }
+                            break;
 
-            case 'redundant':
-              console.error('The installing service worker became redundant.');
-              break;
-          }
-        };
-      };
-    }).catch(function(e) {
-      console.error('Error during service worker registration:', e);
+                        case 'redundant':
+                            console.error('The installing service worker became redundant.');
+                            break;
+                    }
+                };
+            };
+        }).catch(function (e) {
+            console.error('Error during service worker registration:', e);
+        });
     });
-  });
 }
 
 /*! modernizr 3.6.0 (Custom Build) | MIT *
  * https://modernizr.com/download/?-passiveeventlisteners-touchevents !*/
-!function(e,n,t){function o(e,n){return typeof e===n}function s(){var e,n,t,s,i,a,r;for(var l in f)if(f.hasOwnProperty(l)){if(e=[],n=f[l],n.name&&(e.push(n.name.toLowerCase()),n.options&&n.options.aliases&&n.options.aliases.length))for(t=0;t<n.options.aliases.length;t++)e.push(n.options.aliases[t].toLowerCase());for(s=o(n.fn,"function")?n.fn():n.fn,i=0;i<e.length;i++)a=e[i],r=a.split("."),1===r.length?Modernizr[r[0]]=s:(!Modernizr[r[0]]||Modernizr[r[0]]instanceof Boolean||(Modernizr[r[0]]=new Boolean(Modernizr[r[0]])),Modernizr[r[0]][r[1]]=s),d.push((s?"":"no-")+r.join("-"))}}function i(){return"function"!=typeof n.createElement?n.createElement(arguments[0]):p?n.createElementNS.call(n,"http://www.w3.org/2000/svg",arguments[0]):n.createElement.apply(n,arguments)}function a(){var e=n.body;return e||(e=i(p?"svg":"body"),e.fake=!0),e}function r(e,t,o,s){var r,f,l,d,u="modernizr",p=i("div"),h=a();if(parseInt(o,10))for(;o--;)l=i("div"),l.id=s?s[o]:u+(o+1),p.appendChild(l);return r=i("style"),r.type="text/css",r.id="s"+u,(h.fake?h:p).appendChild(r),h.appendChild(p),r.styleSheet?r.styleSheet.cssText=e:r.appendChild(n.createTextNode(e)),p.id=u,h.fake&&(h.style.background="",h.style.overflow="hidden",d=c.style.overflow,c.style.overflow="hidden",c.appendChild(h)),f=t(p,e),h.fake?(h.parentNode.removeChild(h),c.style.overflow=d,c.offsetHeight):p.parentNode.removeChild(p),!!f}var f=[],l={_version:"3.6.0",_config:{classPrefix:"",enableClasses:!0,enableJSClass:!0,usePrefixes:!0},_q:[],on:function(e,n){var t=this;setTimeout(function(){n(t[e])},0)},addTest:function(e,n,t){f.push({name:e,fn:n,options:t})},addAsyncTest:function(e){f.push({name:null,fn:e})}},Modernizr=function(){};Modernizr.prototype=l,Modernizr=new Modernizr;var d=[],u=l._config.usePrefixes?" -webkit- -moz- -o- -ms- ".split(" "):["",""];l._prefixes=u;var c=n.documentElement,p="svg"===c.nodeName.toLowerCase(),h=l.testStyles=r;Modernizr.addTest("touchevents",function(){var t;if("ontouchstart"in e||e.DocumentTouch&&n instanceof DocumentTouch)t=!0;else{var o=["@media (",u.join("touch-enabled),("),"heartz",")","{#modernizr{top:9px;position:absolute}}"].join("");h(o,function(e){t=9===e.offsetTop})}return t}),Modernizr.addTest("passiveeventlisteners",function(){var n=!1;try{var t=Object.defineProperty({},"passive",{get:function(){n=!0}});e.addEventListener("test",null,t)}catch(o){}return n}),s(),delete l.addTest,delete l.addAsyncTest;for(var v=0;v<Modernizr._q.length;v++)Modernizr._q[v]();e.Modernizr=Modernizr}(window,document);
+!function (e, n, t) { function o(e, n) { return typeof e === n } function s() { var e, n, t, s, i, a, r; for (var l in f) if (f.hasOwnProperty(l)) { if (e = [], n = f[l], n.name && (e.push(n.name.toLowerCase()), n.options && n.options.aliases && n.options.aliases.length)) for (t = 0; t < n.options.aliases.length; t++)e.push(n.options.aliases[t].toLowerCase()); for (s = o(n.fn, "function") ? n.fn() : n.fn, i = 0; i < e.length; i++)a = e[i], r = a.split("."), 1 === r.length ? Modernizr[r[0]] = s : (!Modernizr[r[0]] || Modernizr[r[0]] instanceof Boolean || (Modernizr[r[0]] = new Boolean(Modernizr[r[0]])), Modernizr[r[0]][r[1]] = s), d.push((s ? "" : "no-") + r.join("-")) } } function i() { return "function" != typeof n.createElement ? n.createElement(arguments[0]) : p ? n.createElementNS.call(n, "http://www.w3.org/2000/svg", arguments[0]) : n.createElement.apply(n, arguments) } function a() { var e = n.body; return e || (e = i(p ? "svg" : "body"), e.fake = !0), e } function r(e, t, o, s) { var r, f, l, d, u = "modernizr", p = i("div"), h = a(); if (parseInt(o, 10)) for (; o--;)l = i("div"), l.id = s ? s[o] : u + (o + 1), p.appendChild(l); return r = i("style"), r.type = "text/css", r.id = "s" + u, (h.fake ? h : p).appendChild(r), h.appendChild(p), r.styleSheet ? r.styleSheet.cssText = e : r.appendChild(n.createTextNode(e)), p.id = u, h.fake && (h.style.background = "", h.style.overflow = "hidden", d = c.style.overflow, c.style.overflow = "hidden", c.appendChild(h)), f = t(p, e), h.fake ? (h.parentNode.removeChild(h), c.style.overflow = d, c.offsetHeight) : p.parentNode.removeChild(p), !!f } var f = [], l = { _version: "3.6.0", _config: { classPrefix: "", enableClasses: !0, enableJSClass: !0, usePrefixes: !0 }, _q: [], on: function (e, n) { var t = this; setTimeout(function () { n(t[e]) }, 0) }, addTest: function (e, n, t) { f.push({ name: e, fn: n, options: t }) }, addAsyncTest: function (e) { f.push({ name: null, fn: e }) } }, Modernizr = function () { }; Modernizr.prototype = l, Modernizr = new Modernizr; var d = [], u = l._config.usePrefixes ? " -webkit- -moz- -o- -ms- ".split(" ") : ["", ""]; l._prefixes = u; var c = n.documentElement, p = "svg" === c.nodeName.toLowerCase(), h = l.testStyles = r; Modernizr.addTest("touchevents", function () { var t; if ("ontouchstart" in e || e.DocumentTouch && n instanceof DocumentTouch) t = !0; else { var o = ["@media (", u.join("touch-enabled),("), "heartz", ")", "{#modernizr{top:9px;position:absolute}}"].join(""); h(o, function (e) { t = 9 === e.offsetTop }) } return t }), Modernizr.addTest("passiveeventlisteners", function () { var n = !1; try { var t = Object.defineProperty({}, "passive", { get: function () { n = !0 } }); e.addEventListener("test", null, t) } catch (o) { } return n }), s(), delete l.addTest, delete l.addAsyncTest; for (var v = 0; v < Modernizr._q.length; v++)Modernizr._q[v](); e.Modernizr = Modernizr }(window, document);
 
 const clickEvnt = Modernizr.touchevents ? "touchstart" : "click";
 
@@ -91,7 +91,83 @@ var letter_misses = 0;
 var vis_hits = 0;
 var letter_hits = 0;
 var d_prime = 0;
+var d_prime_visual = 0;
+var d_prime_auditory = 0;
 var time = 0;
+
+// Standard normal CDF approximation (Abramowitz and Stegun)
+function normCDF(x) {
+    var a1 = 0.254829592;
+    var a2 = -0.284496736;
+    var a3 = 1.421413741;
+    var a4 = -1.453152027;
+    var a5 = 1.061405429;
+    var p = 0.3275911;
+    var sign = x < 0 ? -1 : 1;
+    x = Math.abs(x) / Math.sqrt(2);
+    var t = 1.0 / (1.0 + p * x);
+    var y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+    return 0.5 * (1.0 + sign * y);
+}
+
+// Inverse normal CDF (percent point function) using Newton-Raphson
+function normPPF(p) {
+    // Clamp to avoid infinity
+    p = Math.max(0.0001, Math.min(0.9999, p));
+
+    // Rational approximation for initial guess (Abramowitz and Stegun 26.2.23)
+    var a = [
+        -3.969683028665376e+01, 2.209460984245205e+02,
+        -2.759285104469687e+02, 1.383577518672690e+02,
+        -3.066479806614716e+01, 2.506628277459239e+00
+    ];
+    var b = [
+        -5.447609879822406e+01, 1.615858368580409e+02,
+        -1.556989798598866e+02, 6.680131188771972e+01, -1.328068155288572e+01
+    ];
+    var c = [
+        -7.784894002430293e-03, -3.223964580411365e-01,
+        -2.400758277161838e+00, -2.549732539343734e+00,
+        4.374664141464968e+00, 2.938163982698783e+00
+    ];
+    var d = [
+        7.784695709041462e-03, 3.224671290700398e-01,
+        2.445134137142996e+00, 3.754408661907416e+00
+    ];
+
+    var pLow = 0.02425;
+    var pHigh = 1 - pLow;
+    var q, r;
+
+    if (p < pLow) {
+        q = Math.sqrt(-2 * Math.log(p));
+        return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+            ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    } else if (p <= pHigh) {
+        q = p - 0.5;
+        r = q * q;
+        return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
+            (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+    } else {
+        q = Math.sqrt(-2 * Math.log(1 - p));
+        return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+            ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+}
+
+// Calculate d' using standard Signal Detection Theory formula
+function calculateDPrime(hits, misses, falseAlarms, correctRejections) {
+    var totalSignal = hits + misses;
+    var totalNoise = falseAlarms + correctRejections;
+
+    if (totalSignal === 0 || totalNoise === 0) return 0;
+
+    // Apply log-linear correction (Hautus, 1995) to avoid infinite values
+    var hitRate = (hits + 0.5) / (totalSignal + 1);
+    var faRate = (falseAlarms + 0.5) / (totalNoise + 1);
+
+    return normPPF(hitRate) - normPPF(faRate);
+}
 
 // Letter choices as defined in Jaeggi, 2003
 const LETTERS = ["B", "C", "D", "G", "H", "K", "P", "Q", "T", "W"];
@@ -114,14 +190,14 @@ function cloner(e) {
 }
 
 function setToggleState(e, state) {
-    e.getElementsByTagName('rect')[0].setAttribute('fill', (state)   ? '#99ccff' : 'grey');
+    e.getElementsByTagName('rect')[0].setAttribute('fill', (state) ? '#99ccff' : 'grey');
     e.getElementsByTagName('circle')[0].setAttribute('fill', (state) ? '#226699' : 'grey');
-    e.getElementsByTagName('circle')[0].setAttribute('cx', (state)   ? '10' : '-10');
+    e.getElementsByTagName('circle')[0].setAttribute('cx', (state) ? '10' : '-10');
 }
 
 function replaceEventListener(e, evt, action) {
     let elm = cloner(e);
-    elm.addEventListener(evt, action, Modernizr.passiveeventlisteners ? {passive: true}: false);
+    elm.addEventListener(evt, action, Modernizr.passiveeventlisteners ? { passive: true } : false);
 }
 
 function get_screen() {
@@ -135,7 +211,7 @@ function get_menu() {
 function get_n_games() {
     let games = stats['games'];
     let gamecount = 0;
-    for (let i=games.length-1; i>-1; i--) {
+    for (let i = games.length - 1; i > -1; i--) {
         if (isToday(games[i]['time'])) {
             gamecount += 1;
         } else { break; } // assumes stats array is sorted.
@@ -164,9 +240,8 @@ function gameKeypress(e) {
 
 function init_home() {
     document.getElementById('#play').style.display = 'block';
-    replaceEventListener(get_screen().getElementById("#gear"), clickEvnt, function(e)  { window.history.pushState({'page':'config'}, '', '');  goto_config();});
-    replaceEventListener(get_screen().getElementById("#help"), clickEvnt, function(e)  { window.history.pushState({'page':'help'},   '', '');  goto_help();});
-    replaceEventListener(get_screen().getElementById("#graph"), clickEvnt, function(e) { window.history.pushState({'page':'stats'},  '', '');  goto_stats();});
+    replaceEventListener(get_screen().getElementById("#gear"), clickEvnt, function (e) { window.history.pushState({ 'page': 'config' }, '', ''); goto_config(); });
+    replaceEventListener(get_screen().getElementById("#graph"), clickEvnt, function (e) { window.history.pushState({ 'page': 'stats' }, '', ''); goto_stats(); });
     document.getElementById("title").textContent = `N = ${N}`;
     document.getElementById("ngames").textContent = `${get_n_games()} / 20 Today`;
     get_screen().getElementById("msgs").textContent = sw_msgs;
@@ -177,7 +252,7 @@ function goto_home() {
     hide_menu();
     if (myInterval > 0)
         clearInterval(myInterval);
-    if(! document.getElementById('thescreen').contentWindow.location.href.endsWith('/screens/home.html')) {
+    if (!document.getElementById('thescreen').contentWindow.location.href.endsWith('/screens/home.html')) {
         document.getElementById('thescreen').contentWindow.location.replace('/screens/home.html');
         document.getElementById('thescreen').onload = function (e) { init_home(); }
     } else {
@@ -193,7 +268,7 @@ function goto_help() {
     document.getElementById('#play').style.display = 'none';
     document.getElementById('thescreen').contentWindow.location.replace('/screens/help.html');
     document.getElementById('thescreen').onload = function (e) {
-        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function(e) { window.history.back(); });
+        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) { window.history.back(); });
     }
 }
 
@@ -218,16 +293,16 @@ function primeAudioEngine() {
                 preload: true,
                 html5: false,
                 sprite: {
-                    B: [1000-100, 850],
-                    C: [2000-100, 850],
-                    D: [3000-100, 850],
-                    G: [4000-100, 850],
-                    H: [5000-100, 850],
-                    K: [6000-100, 850],
-                    P: [7000-100, 850],
-                    Q: [8000-100, 850],
-                    T: [9000-100, 850],
-                    W: [10000-100, 850],
+                    B: [1000 - 100, 850],
+                    C: [2000 - 100, 850],
+                    D: [3000 - 100, 850],
+                    G: [4000 - 100, 850],
+                    H: [5000 - 100, 850],
+                    K: [6000 - 100, 850],
+                    P: [7000 - 100, 850],
+                    Q: [8000 - 100, 850],
+                    T: [9000 - 100, 850],
+                    W: [10000 - 100, 850],
                 }
             });
             // Mute volume, play a sound, and then un-mute
@@ -253,9 +328,9 @@ function goto_game(callback) {
     document.getElementById('thescreen').contentWindow.location.replace('/screens/game.html');
     document.getElementById('thescreen').onload = function (e) {
         get_screen().getElementById("title").textContent = `N = ${N}`;
-        replaceEventListener(get_screen().getElementById("vis_button"), clickEvnt, function(e) {  eyeButtonPress();});
-        replaceEventListener(get_screen().getElementById("letter_button"), clickEvnt, function(e) { soundButtonPress();});
-        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function(e) {
+        replaceEventListener(get_screen().getElementById("vis_button"), clickEvnt, function (e) { eyeButtonPress(); });
+        replaceEventListener(get_screen().getElementById("letter_button"), clickEvnt, function (e) { soundButtonPress(); });
+        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) {
             _paq.push(['trackEvent', 'Game', 'Exit', N]);
             window.history.back();
         });
@@ -270,20 +345,27 @@ function goto_score() {
     document.getElementById('#play').style.display = 'none';
     document.getElementById('thescreen').contentWindow.location.replace('/screens/score.html');
     document.getElementById('thescreen').onload = function (e) {
-        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function(e) {  window.history.back(); });
-        replaceEventListener(get_screen().getElementById("#play"), clickEvnt, function(e) {  startGame(true); });
+        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) { window.history.back(); });
+        replaceEventListener(get_screen().getElementById("#play"), clickEvnt, function (e) { startGame(true); });
 
-        get_screen().getElementById("vis_hits").textContent      = ""+vis_hits;
-        get_screen().getElementById("vis_misses").textContent    = ""+vis_misses;
-        get_screen().getElementById("vis_wrong").textContent     = ""+vis_wrong;
-        get_screen().getElementById("letter_hits").textContent   = ""+letter_hits;
-        get_screen().getElementById("letter_misses").textContent = ""+letter_misses;
-        get_screen().getElementById("letter_wrong").textContent  = ""+letter_wrong;
+        get_screen().getElementById("vis_hits").textContent = "" + vis_hits;
+        get_screen().getElementById("vis_misses").textContent = "" + vis_misses;
+        get_screen().getElementById("vis_wrong").textContent = "" + vis_wrong;
+        get_screen().getElementById("letter_hits").textContent = "" + letter_hits;
+        get_screen().getElementById("letter_misses").textContent = "" + letter_misses;
+        get_screen().getElementById("letter_wrong").textContent = "" + letter_wrong;
 
-        if (d_prime > 0.85) {
+        // Update d' display for visual and auditory (if elements exist)
+        var visD = get_screen().getElementById("vis_dprime");
+        var audD = get_screen().getElementById("letter_dprime");
+        if (visD) visD.textContent = d_prime_visual.toFixed(2);
+        if (audD) audD.textContent = d_prime_auditory.toFixed(2);
+
+        // Color based on new d' thresholds
+        if (d_prime > 2.0) {
             get_screen().getElementById("title").style.color = 'green';
             get_screen().getElementById("level").style.fill = 'green';
-        } else if (d_prime < 0.7) {
+        } else if (d_prime < 1.0) {
             get_screen().getElementById("title").style.color = 'red';
             get_screen().getElementById("level").style.fill = 'red';
         } else {
@@ -291,9 +373,10 @@ function goto_score() {
             get_screen().getElementById("level").style.fill = 'black';
         }
 
-        get_screen().getElementById("title").textContent = `d' = ${Math.round(d_prime*100)}%`;
+        // Display actual d' value instead of percentage
+        get_screen().getElementById("title").textContent = `d' = ${d_prime.toFixed(2)}`;
         get_screen().getElementById("level").textContent = `N = ${N}`;
-        get_screen().getElementById("ngames").textContent = `${get_n_games()} / 20 Today`;
+        get_screen().getElementById("ngames").textContent = `${get_n_games()} / 20 今日`;
 
         let twitter_text = encodeURIComponent(`I made it to N=${N}!`);
         let twitter_link = encodeURIComponent('https://dual-n-back.io/');
@@ -307,21 +390,23 @@ function goto_stats() {
     document.getElementById('#play').style.display = 'none';
     document.getElementById('thescreen').contentWindow.location.replace('/screens/stats.html');
     document.getElementById('thescreen').onload = function (e) {
-        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function(e) { window.history.back(); });
+        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) { window.history.back(); });
     }
 }
 
 function goto_config() {
     document.getElementById('themenu').contentWindow.location.replace('/screens/config.html');
     document.getElementById('themenu').onload = function (e) {
-        replaceEventListener(get_menu().getElementById("#download_stats"), clickEvnt,   downloadStats);
-        replaceEventListener(get_menu().getElementById("#level_down"), clickEvnt,       level_down);
-        replaceEventListener(get_menu().getElementById("#level_up"), clickEvnt,         level_up);
-        replaceEventListener(get_menu().getElementById("#clear_storage"), clickEvnt,    clearStorageButtonClick);
-        replaceEventListener(get_menu().getElementById("#upload_stats"), "change",      uploadConfig);
-        replaceEventListener(get_menu().getElementById("#back"), clickEvnt,             go_back);
-        replaceEventListener(get_menu().getElementById("reset_n"), clickEvnt,           toggle_reset_n);
+        replaceEventListener(get_menu().getElementById("#download_stats"), clickEvnt, downloadStats);
+        replaceEventListener(get_menu().getElementById("#level_down"), clickEvnt, level_down);
+        replaceEventListener(get_menu().getElementById("#level_up"), clickEvnt, level_up);
+        replaceEventListener(get_menu().getElementById("#clear_storage"), clickEvnt, clearStorageButtonClick);
+        replaceEventListener(get_menu().getElementById("#upload_stats"), "change", uploadConfig);
+        replaceEventListener(get_menu().getElementById("#back"), clickEvnt, go_back);
+        replaceEventListener(get_menu().getElementById("reset_n"), clickEvnt, toggle_reset_n);
+        replaceEventListener(get_menu().getElementById("lock_n"), clickEvnt, toggle_lock_n);
         setToggleState(get_menu().getElementById("reset_n"), cfg["reset_n"]);
+        setToggleState(get_menu().getElementById("lock_n"), cfg["lock_n"]);
         get_menu().getElementById("#level_num").innerText = `${N}`;
         show_menu();
     }
@@ -341,6 +426,12 @@ function hide_menu() {
 function toggle_reset_n() {
     cfg["reset_n"] = !cfg["reset_n"];
     setToggleState(get_menu().getElementById("reset_n"), cfg["reset_n"]);
+    localStorage.setItem('config', JSON.stringify(cfg));
+}
+
+function toggle_lock_n() {
+    cfg["lock_n"] = !cfg["lock_n"];
+    setToggleState(get_menu().getElementById("lock_n"), cfg["lock_n"]);
     localStorage.setItem('config', JSON.stringify(cfg));
 }
 
@@ -370,10 +461,10 @@ function downloadStats() {
     elm.style.animationPlayState = 'running';
 
     let backups = { "N": N, "stats": stats };
-    let blob = new Blob([JSON.stringify(backups)], {type: "text"});
+    let blob = new Blob([JSON.stringify(backups)], { type: "text" });
     let element = get_screen().createElement('a');
     element.setAttribute('href', URL.createObjectURL(blob));
-    element.setAttribute('download', "N-Back_Stats"+(new Date()).toJSON()+".json");
+    element.setAttribute('download', "N-Back_Stats" + (new Date()).toJSON() + ".json");
     element.style.display = 'none';
     get_screen().body.appendChild(element);
     element.click();
@@ -385,7 +476,7 @@ function uploadConfig(event) {
         let f = event.target.files[0];
         if (f) {
             let r = new FileReader();
-            r.addEventListener("load", function(event) {
+            r.addEventListener("load", function (event) {
                 let asjson = JSON.parse(event.target.result);
                 stats = asjson["stats"];
                 N = asjson["N"];
@@ -403,14 +494,14 @@ function doClearStorage() {
     try {
         localStorage.removeItem("stats");
         localStorage.removeItem('config');
-    } catch(err) {}
-    cfg = { "reset_n": false };
+    } catch (err) { }
+    cfg = { "reset_n": false, "lock_n": false };
     stats = { "games": [] };
     N = 1;
 }
 
 function clearStorageButtonClick() {
-    if (confirm('Really clear all app data?')) {
+    if (confirm('确定要清除所有应用数据吗？')) {
         let elm = cloner(get_menu().getElementById('#clear_storage'));
         elm.style.webkitAnimationPlayState = 'running';
         elm.style.animationPlayState = 'running';
@@ -429,22 +520,24 @@ function setActiveBox(box) {
 function eyeButtonPress() {
     let delay = Date.now() - timestep_start;
     vis_delays.push(delay);
-    vis_clicks.push(time-1);
+    vis_clicks.push(time - 1);
     get_screen().getElementById('vis_button').style.backgroundColor = '#609f9f';
 }
 
 function soundButtonPress() {
     let delay = Date.now() - timestep_start;
     letter_delays.push(delay);
-    letter_clicks.push(time-1);
+    letter_clicks.push(time - 1);
     get_screen().getElementById('letter_button').style.backgroundColor = '#609f9f';
 }
 
 function updateStats() {
-    let entry = { "time": (new Date()).toJSON(), "N": N,
+    let entry = {
+        "time": (new Date()).toJSON(), "N": N,
         "vStack": vis_stack, "vClicks": vis_clicks, "vDelays": vis_delays,
         "lStack": letter_stack, "lClicks": letter_clicks, "lDelays": letter_delays,
-        "v": 1.0 };
+        "v": 1.0
+    };
     stats["games"].push(entry);
     localStorage.setItem("stats", JSON.stringify(stats));
 }
@@ -456,8 +549,13 @@ function calculateScore() {
     letter_misses = 0;
     vis_hits = 0;
     letter_hits = 0;
-    for (let i=N; i<vis_stack.length; i++) {
-        if (vis_stack[i] == vis_stack[i-N]) {
+
+    // Count correct rejections (no match and no click)
+    var vis_correct_rejections = 0;
+    var letter_correct_rejections = 0;
+
+    for (let i = N; i < vis_stack.length; i++) {
+        if (vis_stack[i] == vis_stack[i - N]) {
             if (vis_clicks.indexOf(i) > -1) {
                 vis_hits += 1;
             } else {
@@ -466,9 +564,11 @@ function calculateScore() {
         } else {
             if (vis_clicks.indexOf(i) > -1) {
                 vis_wrong += 1;
+            } else {
+                vis_correct_rejections += 1;
             }
         }
-        if (letter_stack[i] == letter_stack[i-N]) {
+        if (letter_stack[i] == letter_stack[i - N]) {
             if (letter_clicks.indexOf(i) > -1) {
                 letter_hits += 1;
             } else {
@@ -477,18 +577,24 @@ function calculateScore() {
         } else {
             if (letter_clicks.indexOf(i) > -1) {
                 letter_wrong += 1;
+            } else {
+                letter_correct_rejections += 1;
             }
         }
     }
 
-    let hit_rate = (vis_hits/6.0 + letter_hits/6.0)/2.0;
-    let false_alarm_rate = (vis_wrong/(vis_stack.length-6) + letter_wrong/(vis_stack.length - 6))/2.0;
-    d_prime = hit_rate - false_alarm_rate;
+    // Calculate separate d' for visual and auditory using standard SDT formula
+    d_prime_visual = calculateDPrime(vis_hits, vis_misses, vis_wrong, vis_correct_rejections);
+    d_prime_auditory = calculateDPrime(letter_hits, letter_misses, letter_wrong, letter_correct_rejections);
 
-    if (d_prime > 0.85) {
+    // Combined d' is the average of both modalities
+    d_prime = (d_prime_visual + d_prime_auditory) / 2.0;
+
+    // Standard d' thresholds: d' > 2.0 is good performance, d' < 1.0 is poor
+    if (d_prime > 2.0) {
         _paq.push(['trackEvent', 'Game', 'Win', N]);
         return 1;
-    } else if (d_prime < 0.7) {
+    } else if (d_prime < 1.0) {
         _paq.push(['trackEvent', 'Game', 'Lose', N]);
         return -1;
     } else {
@@ -517,20 +623,22 @@ function doTimestep() {
         setActiveBox(-1);
         clearInterval(myInterval);
         updateStats();
-        N = Math.max(1, N+calculateScore());
-        localStorage.setItem("N", N);
+        // 如果未锁定N等级，则根据表现调整
+        if (!cfg["lock_n"]) {
+            N = Math.max(1, N + calculateScore());
+            localStorage.setItem("N", N);
+        }
         // show score
-        window.history.replaceState({'page':'score'}, '', '');
+        window.history.replaceState({ 'page': 'score' }, '', '');
         goto_score();
     }
 }
 
 // Return an array of 'count' random numbers, between the range [start, stop)
-function getRandomNumbers(start, stop, count)
-{
+function getRandomNumbers(start, stop, count) {
     var result = [];
 
-    for (let i=0; i<count; i++) {
+    for (let i = 0; i < count; i++) {
         var randInt = Math.floor(Math.random() * (stop - start)) + start;
         result.push(randInt);
     }
@@ -546,24 +654,24 @@ function buildGameSequence() {
     // Choose four random timesteps in which there will be a
     // visual match
     while (visual_matches.length < 4) {
-        next = Math.floor(Math.random()*(N_plus));
-        if (visual_matches.indexOf(next+N) == -1)
-            visual_matches.push(next+N);
+        next = Math.floor(Math.random() * (N_plus));
+        if (visual_matches.indexOf(next + N) == -1)
+            visual_matches.push(next + N);
     }
     // Choose four random timesteps in which there will be an
     // auditory match
     while (auditory_matches.length < 4) {
-        next = Math.floor(Math.random()*(N_plus));
-        if (auditory_matches.indexOf(next+N) == -1 && visual_matches.indexOf(next+N) == -1)
-            auditory_matches.push(next+N);
+        next = Math.floor(Math.random() * (N_plus));
+        if (auditory_matches.indexOf(next + N) == -1 && visual_matches.indexOf(next + N) == -1)
+            auditory_matches.push(next + N);
     }
 
     // Choose two random timesteps in which there is a double match
     while (auditory_matches.length < 6) {
-        next = Math.floor(Math.random()*(N_plus));
-        if (auditory_matches.indexOf(next+N) == -1 && visual_matches.indexOf(next+N) == -1) {
-            auditory_matches.push(next+N);
-            visual_matches.push(next+N);
+        next = Math.floor(Math.random() * (N_plus));
+        if (auditory_matches.indexOf(next + N) == -1 && visual_matches.indexOf(next + N) == -1) {
+            auditory_matches.push(next + N);
+            visual_matches.push(next + N);
         }
     }
 
@@ -575,23 +683,23 @@ function buildGameSequence() {
     // Make sure that unless this is one of the selected timesteps
     // from earlier, that each position is not the same as the one
     // N steps ago.
-    while (visual_stack.length < N_plus+N) {
+    while (visual_stack.length < N_plus + N) {
         if (visual_matches.indexOf(visual_stack.length) != -1) {
-            visual_stack.push(visual_stack[visual_stack.length-N]);
+            visual_stack.push(visual_stack[visual_stack.length - N]);
         } else {
-            next = Math.floor(Math.random()*(7));
-            if (next >= visual_stack[visual_stack.length-N])
+            next = Math.floor(Math.random() * (7));
+            if (next >= visual_stack[visual_stack.length - N])
                 next += 1;
             visual_stack.push(next);
         }
     }
 
-    while (auditory_stack.length < N_plus+N) {
+    while (auditory_stack.length < N_plus + N) {
         if (auditory_matches.indexOf(auditory_stack.length) != -1) {
-            auditory_stack.push(auditory_stack[auditory_stack.length-N]);
+            auditory_stack.push(auditory_stack[auditory_stack.length - N]);
         } else {
-            next = Math.floor(Math.random()*(9));
-            if (next >= auditory_stack[auditory_stack.length-N])
+            next = Math.floor(Math.random() * (9));
+            if (next >= auditory_stack[auditory_stack.length - N])
                 next += 1;
             auditory_stack.push(next);
         }
@@ -604,9 +712,9 @@ function startGame(isRestart) {
     console.log(`Starting game N=${N}`);
     _paq.push(['trackEvent', 'Game', (isRestart ? 'Restart' : 'Start'), N]);
     if (isRestart)
-        window.history.replaceState({'page':'game'}, '', '');
+        window.history.replaceState({ 'page': 'game' }, '', '');
     else
-        window.history.pushState({'page':'game'}, '', '');
+        window.history.pushState({ 'page': 'game' }, '', '');
 
     let stacks = buildGameSequence(N);
     vis_stack = stacks[0];
@@ -617,13 +725,13 @@ function startGame(isRestart) {
     vis_delays = [];
     letter_delays = [];
     time = 0;
-    goto_game(function() {
+    goto_game(function () {
         // Start game
         myInterval = setInterval(doTimestep, iFrequency);  // run
     });
 }
 
-window.onpopstate = function(event) {
+window.onpopstate = function (event) {
     //console.log("location: " + location.href + ", data: " + JSON.stringify(event.state));
     if (event.state == null || event.state['page'] == 'home')
         goto_home();
@@ -635,22 +743,23 @@ window.onpopstate = function(event) {
         goto_stats();
 };
 
-window.addEventListener("load", function() {
-    try { stats = JSON.parse(localStorage.getItem("stats")); } catch (err)  { }
-    try { N = parseInt(localStorage.getItem("N")); }           catch (err)  { }
-    try { cfg = JSON.parse(localStorage.getItem("config")); }  catch (err)  { }
+window.addEventListener("load", function () {
+    try { stats = JSON.parse(localStorage.getItem("stats")); } catch (err) { }
+    try { N = parseInt(localStorage.getItem("N")); } catch (err) { }
+    try { cfg = JSON.parse(localStorage.getItem("config")); } catch (err) { }
 
     if (!stats) stats = { 'games': [] };
-    if (!N)     N = 1;
-    if (!cfg)   cfg = { 'reset_n': false };
+    if (!N) N = 1;
+    if (!cfg) cfg = { 'reset_n': false, 'lock_n': false };
+    if (cfg['lock_n'] === undefined) cfg['lock_n'] = false;
 
     if (stats['games'].length > 0) {
-        let latest_game = stats['games'][stats['games'].length-1];
+        let latest_game = stats['games'][stats['games'].length - 1];
         if (cfg['reset_n'] && !isToday(latest_game['time'])) {
             N = 1;
         }
     }
 
-    window.history.pushState({'page':'home'}, '', '');
+    window.history.pushState({ 'page': 'home' }, '', '');
     goto_home();
 });
