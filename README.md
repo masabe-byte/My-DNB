@@ -1,26 +1,19 @@
-Dual-N-Back Game
-======
 
-Play it online at [https://dual-n-back.io/](https://www.dual-n-back.io/).
+## 用于：ai辅助下尝试开发的草稿箱
 
-Based on the task originally proposed by [1], and adapted by [2]. Dual N-Back has been shown to improve working memory over time. For more information see [3] and [4].
+### 描述
+这是一个从旧开发环境导出、用于清理本地磁盘空间的临时存档。包含实验性尝试、AI自动生成的构建产物以及 2025 年下半年的各种碎片文件。
+测试下可能包含大量未经处理的逻辑错误和崩溃点，暂未进行修复。请勿当作任何可用的代码参考
 
-## Instructions
-The goal of each level is to remember the state of the game exactly N timesteps ago.
+### 维护说明
+本仓库**不面向公众**，也无任何协同开发的价值。它仅仅是一个本地草稿箱，随时可能被删除或覆盖。
 
-The game board is a set of eight squares. They will flash in a random order, at three seconds intervals. When you recognize that the same square flashed exactly N steps ago, you press the   button.
 
-Simultaneously, one letter is spoken at each time step. When you recognize that the same letter was spoken exactly N steps ago, you press the   button.
+## Used for: draft boxes that are attempted to be developed with AI assistance
 
-<img src='img/example.png?raw=true' width=500px />
-**Example sequence for N=2 game.** The player must remember the state of the game board N steps ago. If you do well, N will increase on the next round. If you don't do so well, N will decrease on the next round (down to N=1). There are 20+N time steps in each round.
+### Description
+This is a temporary archive exported from the old development environment to clean up local disk space. Contains experimental attempts, AI-generated builds, and various fragmented files for the second half of 2025.
+The test may contain a large number of unhandled logic errors and crash points that have not been fixed yet. Do not use this as a reference to any available code
 
-## Credits:
-Based on the work of [1], [2], and others. Audio clips adapted from [5], most of the icons are from [6].
-
-[1] [Jaeggi, S. M. et al. Does excessive memory load attenuate activation in the prefrontal cortex? Load-dependent processing in single and dual tasks: functional magnetic resonance imaging study. NeuroImage 19, 210–225 (2003).](http://jtoomim.org/brain-training/jaeggi2003-describing-dualnback.pdf)<br/>
-[2] [Blacker, K. J., Negoita, S., Ewen, J. B. & Courtney, S. M. N-back Versus Complex Span Working Memory Training. J Cogn Enhanc 1–21 (2017). doi:10.1007/s41465-017-0044-1](https://link.springer.com/article/10.1007/s41465-017-0044-1)<br/>
-[3] [https://www.npr.org/sections/health-shots/2017/10/23/558767704/in-memory-training-smackdown-one-method-dominates](https://www.npr.org/sections/health-shots/2017/10/23/558767704/in-memory-training-smackdown-one-method-dominates)<br/>
-[4] [https://en.wikipedia.org/wiki/N-back#Dual_n-back](https://en.wikipedia.org/wiki/N-back#Dual_n-back)<br/>
-[5] [http://soundbible.com/2009-A-Z-Vocalized.html (Creative Commons Attribution 3.0 license)](http://soundbible.com/2009-A-Z-Vocalized.html)<br/>
-[6] [http://simpleicon.com/ (Pretty much same as the CC Attribution license)](http://simpleicon.com/)
+### Maintenance Notes
+This warehouse is not intended for the public and has no collaborative development value. It's just a local draftbox that can be deleted or overwritten at any time.
