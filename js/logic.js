@@ -714,9 +714,10 @@ function doTimestep() {
         gameInputActive = false;
         window.removeEventListener("keydown", gameKeypress);
         updateStats();
+        var levelDelta = calculateScore();
         // 如果未锁定N等级，则根据表现调整
         if (!cfg["lock_n"]) {
-            N = Math.max(1, N + calculateScore());
+            N = Math.max(1, N + levelDelta);
             AppStorage.setN(N);
         }
         // show score

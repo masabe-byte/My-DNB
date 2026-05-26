@@ -45,7 +45,8 @@ function updateSummaryPanel(stats) {
 
     // 当前等级
     try {
-        var currentN = JSON.parse(localStorage.getItem("N")) || 1;
+        var currentN = parent.AppStorage ? parent.AppStorage.getN() : JSON.parse(localStorage.getItem("N"));
+        currentN = currentN || 1;
         document.getElementById("current-level").textContent = "N=" + currentN;
     } catch (err) {
         document.getElementById("current-level").textContent = "N=1";
@@ -92,7 +93,7 @@ function plot_level_v_time(stats) {
         return false;
 
     try {
-        var N = JSON.parse(localStorage.getItem("N"));
+        var N = parent.AppStorage ? parent.AppStorage.getN() : JSON.parse(localStorage.getItem("N"));
         X.push(X[X.length - 1] + 1);
         Y.push(N);
         if (N > nmax)
@@ -701,7 +702,7 @@ function updateAdvancedSummary(stats) {
 
 window.onload = function () {
     try {
-        stats = JSON.parse(localStorage.getItem("stats"));
+        stats = parent.AppStorage ? parent.AppStorage.getStats() : JSON.parse(localStorage.getItem("stats"));
     } catch (err) { }
 
     if (!stats || !stats['games'] || stats['games'].length === 0) {
