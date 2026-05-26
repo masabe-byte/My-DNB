@@ -1,0 +1,14 @@
+{
+  "name": "dual-n-back",
+  "version": "1.0.0",
+  "description": "Dual-N-Back Brain Training Game",
+  "scripts": {
+    "prepare-dist": "node scripts/prepare-dist.cjs",
+    "tauri": "tauri",
+    "start": "npm run prepare-dist && tauri dev",
+    "build": "npm run prepare-dist && tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.2"
+  }
+}
