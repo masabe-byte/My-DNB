@@ -146,6 +146,19 @@ td {
     text-align: center;
 }
 
+.license-badge {
+    display: inline-block;
+    margin-right: 0.4em;
+    padding: 0.2em 0.55em;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    color: inherit;
+    font-size: 0.85em;
+    font-weight: bold;
+    line-height: 1.3;
+    vertical-align: middle;
+}
+
 .square-button {
     width: 6vw;
     /* Adjust the size as per your requirement */
