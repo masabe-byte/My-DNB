@@ -1,26 +1,24 @@
 /**
- * Storage Adapter
- * 在 Tauri 环境中使用文件存储，在浏览器中使用 localStorage
+ * Storage adapter.
+ * Uses Tauri commands for durable app-data files and localStorage in browsers.
  */
 
 (function () {
     'use strict';
 
-    // 检测是否在 Tauri 环境中
     const isTauri = window.__TAURI__ !== undefined;
+    const allowedKeys = new Set(['stats', 'N', 'config']);
 
-    // 内存缓存
     let cache = {
         stats: null,
         N: null,
         config: null
     };
 
-    // 数据已加载标志
     let dataLoaded = false;
     let loadPromise = null;
+    let saveQueue = Promise.resolve();
 
-    // Tauri invoke 封装
     async function tauriInvoke(cmd, args) {
         if (window.__TAURI__ && window.__TAURI__.core) {
             return await window.__TAURI__.core.invoke(cmd, args);
@@ -28,7 +26,13 @@
         return null;
     }
 
-    // 加载所有数据
+    function filenameForKey(key) {
+        if (!allowedKeys.has(key)) {
+            throw new Error('Unknown storage key: ' + key);
+        }
+        return key + '.json';
+    }
+
     async function loadAllData() {
         if (dataLoaded) return;
 
@@ -46,7 +50,6 @@
                 console.error('Error loading data from files:', error);
             }
         } else {
-            // 从 localStorage 加载
             try { cache.stats = JSON.parse(localStorage.getItem('stats')); } catch (e) { }
             try { cache.N = JSON.parse(localStorage.getItem('N')); } catch (e) { }
             try { cache.config = JSON.parse(localStorage.getItem('config')); } catch (e) { }
@@ -55,63 +58,82 @@
         dataLoaded = true;
     }
 
-    // 保存数据
-    async function saveItem(key, value) {
-        cache[key] = value;
-
-        if (isTauri) {
-            try {
-                await tauriInvoke('save_data', { filename: key + '.json', data: value });
-            } catch (error) {
-                console.error('Error saving data to file:', error);
-            }
-        } else {
-            try {
-                localStorage.setItem(key, JSON.stringify(value));
-            } catch (e) {
-                console.error('Error saving to localStorage:', e);
-            }
-        }
+    function enqueueSave(task) {
+        saveQueue = saveQueue.then(task, task);
+        return saveQueue;
     }
 
-    // 获取数据
+    async function saveItem(key, value) {
+        filenameForKey(key);
+        cache[key] = value;
+
+        return enqueueSave(async function () {
+            if (isTauri) {
+                try {
+                    return await tauriInvoke('save_data', { filename: filenameForKey(key), data: value });
+                } catch (error) {
+                    console.error('Error saving data to file:', error);
+                    return false;
+                }
+            }
+
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                console.error('Error saving to localStorage:', e);
+                return false;
+            }
+        });
+    }
+
     function getItem(key) {
+        filenameForKey(key);
         return cache[key];
     }
 
-    // 删除数据
     async function removeItem(key) {
+        filenameForKey(key);
         cache[key] = null;
 
-        if (isTauri) {
-            try {
-                await tauriInvoke('save_data', { filename: key + '.json', data: null });
-            } catch (error) {
-                console.error('Error removing data:', error);
+        return enqueueSave(async function () {
+            if (isTauri) {
+                try {
+                    return await tauriInvoke('save_data', { filename: filenameForKey(key), data: null });
+                } catch (error) {
+                    console.error('Error removing data:', error);
+                    return false;
+                }
             }
-        } else {
+
             localStorage.removeItem(key);
-        }
+            return true;
+        });
     }
 
-    // 清除所有数据
     async function clearAll() {
         cache = { stats: null, N: null, config: null };
 
-        if (isTauri) {
-            await Promise.all([
-                tauriInvoke('save_data', { filename: 'stats.json', data: null }),
-                tauriInvoke('save_data', { filename: 'N.json', data: null }),
-                tauriInvoke('save_data', { filename: 'config.json', data: null })
-            ]);
-        } else {
+        return enqueueSave(async function () {
+            if (isTauri) {
+                return await Promise.all([
+                    tauriInvoke('save_data', { filename: 'stats.json', data: null }),
+                    tauriInvoke('save_data', { filename: 'N.json', data: null }),
+                    tauriInvoke('save_data', { filename: 'config.json', data: null })
+                ]);
+            }
+
             localStorage.removeItem('stats');
             localStorage.removeItem('N');
             localStorage.removeItem('config');
-        }
+            return true;
+        });
     }
 
-    // 暴露到全局
+    function flush() {
+        return saveQueue;
+    }
+
     window.AppStorage = {
         isTauri: isTauri,
         loadAllData: loadAllData,
@@ -119,8 +141,8 @@
         getItem: getItem,
         removeItem: removeItem,
         clearAll: clearAll,
+        flush: flush,
 
-        // 便捷方法
         getStats: () => getItem('stats'),
         setStats: (v) => saveItem('stats', v),
         getN: () => getItem('N'),
@@ -129,7 +151,6 @@
         setConfig: (v) => saveItem('config', v)
     };
 
-    // 返回加载数据的 Promise
     window.AppStorage.init = function () {
         if (!loadPromise) {
             loadPromise = loadAllData();

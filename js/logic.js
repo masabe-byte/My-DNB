@@ -45,6 +45,7 @@ var d_prime_visual = 0;
 var d_prime_auditory = 0;
 var time = 0;
 var gameInputActive = false;
+var timestepInProgress = false;
 
 // Standard normal CDF approximation (Abramowitz and Stegun)
 function normCDF(x) {
@@ -199,8 +200,6 @@ function get_n_games() {
 function gameKeypress(e) {
     if (e.repeat || !gameInputActive) return;
     const keyChar = (e.key || String.fromCharCode(e.keyCode || e.which)).toLowerCase();
-    console.log(`Received keypress ${keyChar}`);
-
     // Blacker et al 2017 used d/f for left hand operation and j/k for right hand operation
     // (they used them for a permuted rule operations task, but we'll adopt the same keys
     // for the N-back task)
@@ -219,8 +218,6 @@ function gameKeypress(e) {
 }
 
 function init_home() {
-    console.log("init_home called");
-
     // 显示播放按钮
     document.getElementById('#play').style.display = 'block';
 
@@ -229,24 +226,17 @@ function init_home() {
     var graphBtn = get_screen().getElementById("#graph");
     var msgsEl = get_screen().getElementById("msgs");
 
-    console.log("gearBtn:", gearBtn);
-    console.log("graphBtn:", graphBtn);
-
     if (gearBtn) {
         replaceEventListener(gearBtn, clickEvnt, function (e) {
-            console.log("gear clicked");
             window.history.pushState({ 'page': 'config' }, '', '');
             goto_config();
         });
-        console.log("gearBtn event attached");
     }
     if (graphBtn) {
         replaceEventListener(graphBtn, clickEvnt, function (e) {
-            console.log("graph clicked");
             window.history.pushState({ 'page': 'stats' }, '', '');
             goto_stats();
         });
-        console.log("graphBtn event attached");
     }
 
     // 更新标题和游戏计数
@@ -256,11 +246,9 @@ function init_home() {
     if (ngamesEl) ngamesEl.textContent = `${get_n_games()} / 20 Today`;
     if (msgsEl) msgsEl.textContent = '';
 
-    console.log("init_home completed");
 }
 
 function goto_home() {
-    console.log("goto_home called");
     hide_menu();
     if (myInterval > 0) {
         clearInterval(myInterval);
@@ -273,7 +261,6 @@ function goto_home() {
     // 强制重新加载 home.html（使用时间戳防止缓存）
     var iframe = document.getElementById('thescreen');
     iframe.onload = function (e) {
-        console.log("home.html loaded, calling init_home");
         init_home();
     };
     iframe.src = './screens/home.html?' + Date.now();
@@ -299,16 +286,13 @@ function primeAudioEngine() {
         if (sprites !== undefined) {
             // Mute volume, play a sound, and then un-mute
             // to force audio engine to fully load the sprites.
-            console.log("Priming audio engine.");
             Howler.volume(0.0);
             sprites.play("B");
             sprites.once("end", () => {
                 Howler.volume(1.0);
-                console.log("Ready");
                 resolve();
             });
         } else {
-            console.log("Loading audio engine...");
             sprites = new Howl({
                 src: ["./audio/sprites.mp3", "./audio/sprites.wav"],
                 preload: true,
@@ -336,12 +320,10 @@ function primeAudioEngine() {
             // Mute volume, play a sound, and then un-mute
             // to force audio engine to fully load the sprites.
             sprites.once("load", () => {
-                console.log("Priming audio engine.");
                 Howler.volume(0.0);
                 sprites.play("B");
                 sprites.once("end", () => {
                     Howler.volume(1.0);
-                    console.log("Ready");
                     resolve();
                 });
             });
@@ -368,7 +350,6 @@ function goto_game(callback) {
         replaceEventListener(get_screen().getElementById("vis_button"), clickEvnt, function (e) { eyeButtonPress(); });
         replaceEventListener(get_screen().getElementById("letter_button"), clickEvnt, function (e) { soundButtonPress(); });
         replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) {
-            console.log("Game back button clicked");
             if (myInterval > 0) clearInterval(myInterval);
             myInterval = 0;
             gameInputActive = false;
@@ -476,41 +457,31 @@ function hide_menu() {
 }
 
 // 设置页面的返回按钮 - 只关闭侧边栏，不导航
-function go_back(e) {
-    console.log("go_back called - hiding menu only");
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    hide_menu();
-    return false;
-}
-
-function toggle_reset_n() {
+async function toggle_reset_n() {
     cfg["reset_n"] = !cfg["reset_n"];
     setToggleState(get_menu().getElementById("reset_n"), cfg["reset_n"]);
-    AppStorage.setConfig(cfg);
+    await AppStorage.setConfig(cfg);
 }
 
-function toggle_lock_n() {
+async function toggle_lock_n() {
     cfg["lock_n"] = !cfg["lock_n"];
     setToggleState(get_menu().getElementById("lock_n"), cfg["lock_n"]);
-    AppStorage.setConfig(cfg);
+    await AppStorage.setConfig(cfg);
 }
 
-function set_n(new_level) {
+async function set_n(new_level) {
     N = Math.max(1, new_level);
-    AppStorage.setN(N);
+    await AppStorage.setN(N);
     get_menu().getElementById("#level_num").innerText = `${N}`;
 }
 
-function level_down() {
-    set_n(N - 1);
+async function level_down() {
+    await set_n(N - 1);
     _paq.push(['trackEvent', 'Config', 'LevelDown', N]);
 }
 
-function level_up() {
-    set_n(N + 1);
+async function level_up() {
+    await set_n(N + 1);
     _paq.push(['trackEvent', 'Config', 'LevelUp', N]);
 }
 
@@ -539,13 +510,14 @@ function uploadConfig(event) {
         let f = event.target.files[0];
         if (f) {
             let r = new FileReader();
-            r.addEventListener("load", function (event) {
+            r.addEventListener("load", async function (event) {
                 try {
                     let asjson = JSON.parse(event.target.result);
                     stats = normalizeStats(asjson["stats"]);
                     N = normalizeLevel(asjson["N"]);
-                    AppStorage.setStats(stats);
-                    AppStorage.setN(N);
+                    await AppStorage.setStats(stats);
+                    await AppStorage.setN(N);
+                    await AppStorage.flush();
                     goto_home();
                 } catch (error) {
                     alert('备份文件格式无效，未恢复数据。');
@@ -558,23 +530,24 @@ function uploadConfig(event) {
     }
 }
 
-function doClearStorage() {
+async function doClearStorage() {
     try {
-        AppStorage.clearAll();
+        await AppStorage.clearAll();
     } catch (err) { }
     cfg = { "reset_n": false, "lock_n": false };
     stats = { "games": [] };
     N = 1;
 }
 
-function clearStorageButtonClick() {
+async function clearStorageButtonClick() {
     if (confirm('确定要清除所有应用数据吗？')) {
         let elm = cloner(get_menu().getElementById('#clear_storage'));
         if (elm) {
             elm.style.webkitAnimationPlayState = 'running';
             elm.style.animationPlayState = 'running';
         }
-        doClearStorage();
+        await doClearStorage();
+        goto_home();
     }
 }
 
@@ -609,7 +582,7 @@ function soundButtonPress() {
     if (button) button.style.backgroundColor = '#609f9f';
 }
 
-function updateStats() {
+async function updateStats() {
     let entry = {
         "time": (new Date()).toJSON(), "N": N,
         "vStack": vis_stack, "vClicks": vis_clicks, "vDelays": vis_delays,
@@ -617,7 +590,7 @@ function updateStats() {
         "v": 1.0
     };
     stats["games"].push(entry);
-    AppStorage.setStats(stats);
+    await AppStorage.setStats(stats);
 }
 
 function calculateScore() {
@@ -685,7 +658,10 @@ function playLetter(idx) {
     if (sprites && LETTERS[idx]) sprites.play(LETTERS[idx]);
 }
 
-function doTimestep() {
+async function doTimestep() {
+    if (timestepInProgress) return;
+    timestepInProgress = true;
+    try {
     // 检查游戏界面元素是否存在
     var visButton = get_screen().getElementById('vis_button');
     var letterButton = get_screen().getElementById('letter_button');
@@ -701,8 +677,6 @@ function doTimestep() {
     if (time < vis_stack.length) {
         let letter_idx = letter_stack[time];
         let box_idx = vis_stack[time];
-        console.log(`${time}: ${LETTERS[letter_idx]} / ${box_idx}`);
-
         timestep_start = Date.now();
         gameInputActive = true;
         setActiveBox(box_idx);
@@ -713,16 +687,20 @@ function doTimestep() {
         clearInterval(myInterval);
         gameInputActive = false;
         window.removeEventListener("keydown", gameKeypress);
-        updateStats();
+        await updateStats();
         var levelDelta = calculateScore();
         // 如果未锁定N等级，则根据表现调整
         if (!cfg["lock_n"]) {
             N = Math.max(1, N + levelDelta);
-            AppStorage.setN(N);
+            await AppStorage.setN(N);
         }
+        await AppStorage.flush();
         // show score
         window.history.replaceState({ 'page': 'score' }, '', '');
         goto_score();
+    }
+    } finally {
+        timestepInProgress = false;
     }
 }
 
@@ -801,7 +779,6 @@ function buildGameSequence() {
 }
 
 function startGame(isRestart) {
-    console.log(`Starting game N=${N}`);
     _paq.push(['trackEvent', 'Game', (isRestart ? 'Restart' : 'Start'), N]);
     if (isRestart)
         window.history.replaceState({ 'page': 'game' }, '', '');
@@ -821,6 +798,7 @@ function startGame(isRestart) {
     goto_game(function () {
         // Start game
         myInterval = setInterval(doTimestep, iFrequency);  // run
+        doTimestep();
     });
 }
 
