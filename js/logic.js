@@ -1,61 +1,11 @@
 'use strict';
 
-var sw_msgs = '';
-
 // This site previously used Piwik (Matomo) for local analytics (to track how
 // far folks were getting in the game, etc), but the curiosity wore off and I
 // shut down the AWS instance that hosted it. This `_paq` variable was
 // previously defined by piwik, but I'm replacing it here with a dummy variable
 // to avoid refactoring out the original tracking points.
 var _paq = [];
-
-if ('serviceWorker' in navigator) {
-    // Delay registration until after the page has loaded, to ensure that our
-    // precaching requests don't degrade the first visit experience.
-    // See https://developers.google.com/web/fundamentals/instant-and-offline/service-worker/registration
-    window.addEventListener('load', function () {
-        // Your service-worker.js *must* be located at the top-level directory relative to your site.
-        // It won't be able to control pages unless it's located at the same level or higher than them.
-        // *Don't* register service worker file in, e.g., a scripts/ sub-directory!
-        // See https://github.com/slightlyoff/ServiceWorker/issues/468
-        navigator.serviceWorker.register('/sw.js').then(function (reg) {
-            // updatefound is fired if service-worker.js changes.
-            reg.onupdatefound = function () {
-                // The updatefound event implies that reg.installing is set; see
-                // https://w3c.github.io/ServiceWorker/#service-worker-registration-updatefound-event
-                let installingWorker = reg.installing;
-
-                installingWorker.onstatechange = function () {
-                    switch (installingWorker.state) {
-                        case 'installed':
-                            if (navigator.serviceWorker.controller) {
-                                // At this point, the old content will have been purged and the fresh content will
-                                // have been added to the cache.
-                                // It's the perfect time to display a "New content is available; please refresh."
-                                // message in the page's interface.
-                                sw_msgs = 'A new version is available.<br/>Refresh the page to update.';
-                            } else {
-                                // At this point, everything has been precached.
-                                // It's the perfect time to display a "Content is cached for offline use." message.
-                                sw_msgs = 'Content is cached for offline use';
-                            }
-                            try {
-                                get_screen().getElementById("msgs").textContent = sw_msgs;
-                                sw_msgs = '';
-                            } catch (e) { }
-                            break;
-
-                        case 'redundant':
-                            console.error('The installing service worker became redundant.');
-                            break;
-                    }
-                };
-            };
-        }).catch(function (e) {
-            console.error('Error during service worker registration:', e);
-        });
-    });
-}
 
 /*! modernizr 3.6.0 (Custom Build) | MIT *
  * https://modernizr.com/download/?-passiveeventlisteners-touchevents !*/
@@ -94,6 +44,7 @@ var d_prime = 0;
 var d_prime_visual = 0;
 var d_prime_auditory = 0;
 var time = 0;
+var gameInputActive = false;
 
 // Standard normal CDF approximation (Abramowitz and Stegun)
 function normCDF(x) {
@@ -183,21 +134,47 @@ function isToday(d) {
     return compareDates(new Date(d), new Date());
 }
 
+function normalizeStats(value) {
+    return value && Array.isArray(value.games) ? value : { 'games': [] };
+}
+
+function normalizeLevel(value) {
+    var parsed = parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function normalizeConfig(value) {
+    var normalized = value && typeof value === 'object' ? value : {};
+    return {
+        'reset_n': Boolean(normalized.reset_n),
+        'lock_n': Boolean(normalized.lock_n)
+    };
+}
+
 function cloner(e) {
+    if (!e || !e.parentNode) return null;
     let newone = e.cloneNode(true);
     e.parentNode.replaceChild(newone, e);
     return newone;
 }
 
 function setToggleState(e, state) {
-    e.getElementsByTagName('rect')[0].setAttribute('fill', (state) ? '#99ccff' : 'grey');
-    e.getElementsByTagName('circle')[0].setAttribute('fill', (state) ? '#226699' : 'grey');
-    e.getElementsByTagName('circle')[0].setAttribute('cx', (state) ? '10' : '-10');
+    if (!e) return;
+    var rect = e.getElementsByTagName('rect')[0];
+    var circle = e.getElementsByTagName('circle')[0];
+    if (!rect || !circle) return;
+    rect.setAttribute('fill', (state) ? '#99ccff' : 'grey');
+    circle.setAttribute('fill', (state) ? '#226699' : 'grey');
+    circle.setAttribute('cx', (state) ? '10' : '-10');
 }
 
 function replaceEventListener(e, evt, action) {
+    if (!e) {
+        console.warn('replaceEventListener: element is null');
+        return;
+    }
     let elm = cloner(e);
-    elm.addEventListener(evt, action, Modernizr.passiveeventlisteners ? { passive: true } : false);
+    if (elm) elm.addEventListener(evt, action, false);
 }
 
 function get_screen() {
@@ -220,7 +197,8 @@ function get_n_games() {
 }
 
 function gameKeypress(e) {
-    const keyChar = String.fromCharCode(e.keyCode || e.which);
+    if (e.repeat || !gameInputActive) return;
+    const keyChar = (e.key || String.fromCharCode(e.keyCode || e.which)).toLowerCase();
     console.log(`Received keypress ${keyChar}`);
 
     // Blacker et al 2017 used d/f for left hand operation and j/k for right hand operation
@@ -230,51 +208,94 @@ function gameKeypress(e) {
     const rightKeys = new Set([';', 'f', 'k']);
 
     if (leftKeys.has(keyChar)) {
+        e.preventDefault();
         // left side
         eyeButtonPress();
     } else if (rightKeys.has(keyChar)) {
+        e.preventDefault();
         // right side
         soundButtonPress();
     }
 }
 
 function init_home() {
+    console.log("init_home called");
+
+    // 显示播放按钮
     document.getElementById('#play').style.display = 'block';
-    replaceEventListener(get_screen().getElementById("#gear"), clickEvnt, function (e) { window.history.pushState({ 'page': 'config' }, '', ''); goto_config(); });
-    replaceEventListener(get_screen().getElementById("#graph"), clickEvnt, function (e) { window.history.pushState({ 'page': 'stats' }, '', ''); goto_stats(); });
-    document.getElementById("title").textContent = `N = ${N}`;
-    document.getElementById("ngames").textContent = `${get_n_games()} / 20 Today`;
-    get_screen().getElementById("msgs").textContent = sw_msgs;
-    sw_msgs = '';
+
+    // 确保 iframe 内容已加载
+    var gearBtn = get_screen().getElementById("#gear");
+    var graphBtn = get_screen().getElementById("#graph");
+    var msgsEl = get_screen().getElementById("msgs");
+
+    console.log("gearBtn:", gearBtn);
+    console.log("graphBtn:", graphBtn);
+
+    if (gearBtn) {
+        replaceEventListener(gearBtn, clickEvnt, function (e) {
+            console.log("gear clicked");
+            window.history.pushState({ 'page': 'config' }, '', '');
+            goto_config();
+        });
+        console.log("gearBtn event attached");
+    }
+    if (graphBtn) {
+        replaceEventListener(graphBtn, clickEvnt, function (e) {
+            console.log("graph clicked");
+            window.history.pushState({ 'page': 'stats' }, '', '');
+            goto_stats();
+        });
+        console.log("graphBtn event attached");
+    }
+
+    // 更新标题和游戏计数
+    var titleEl = document.getElementById("title");
+    var ngamesEl = document.getElementById("ngames");
+    if (titleEl) titleEl.textContent = `N = ${N}`;
+    if (ngamesEl) ngamesEl.textContent = `${get_n_games()} / 20 Today`;
+    if (msgsEl) msgsEl.textContent = '';
+
+    console.log("init_home completed");
 }
 
 function goto_home() {
+    console.log("goto_home called");
     hide_menu();
-    if (myInterval > 0)
+    if (myInterval > 0) {
         clearInterval(myInterval);
-    if (!document.getElementById('thescreen').contentWindow.location.href.endsWith('/screens/home.html')) {
-        document.getElementById('thescreen').contentWindow.location.replace('/screens/home.html');
-        document.getElementById('thescreen').onload = function (e) { init_home(); }
-    } else {
-        if (document.getElementById('thescreen').contentWindow.document.readyState == 'complete')
-            init_home();
-        else
-            document.getElementById('thescreen').onload = function (e) { init_home(); }
+        myInterval = 0;
     }
+    // 返回主页时显示计时器
+    var timerWidget = document.getElementById('timer-widget');
+    if (timerWidget) timerWidget.style.display = 'block';
+
+    // 强制重新加载 home.html（使用时间戳防止缓存）
+    var iframe = document.getElementById('thescreen');
+    iframe.onload = function (e) {
+        console.log("home.html loaded, calling init_home");
+        init_home();
+    };
+    iframe.src = './screens/home.html?' + Date.now();
 }
 
 function goto_help() {
     hide_menu();
     document.getElementById('#play').style.display = 'none';
-    document.getElementById('thescreen').contentWindow.location.replace('/screens/help.html');
+    document.getElementById('thescreen').src = './screens/help.html';
     document.getElementById('thescreen').onload = function (e) {
-        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) { window.history.back(); });
+        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) { goto_home(); });
     }
 }
 
 function primeAudioEngine() {
     // Play a very short sound to force browser audio engine to wake up
     return new Promise((resolve) => {
+        if (typeof Howl !== 'function' || typeof Howler !== 'object') {
+            console.error("Howler is not available; continuing without audio.");
+            resolve();
+            return;
+        }
         if (sprites !== undefined) {
             // Mute volume, play a sound, and then un-mute
             // to force audio engine to fully load the sprites.
@@ -289,9 +310,9 @@ function primeAudioEngine() {
         } else {
             console.log("Loading audio engine...");
             sprites = new Howl({
-                src: ["/audio/sprites.mp3", "/audio/sprites.wav"],
+                src: ["./audio/sprites.mp3", "./audio/sprites.wav"],
                 preload: true,
-                html5: false,
+                html5: true,  // 使用 HTML5 音频以兼容 Electron
                 sprite: {
                     B: [1000 - 100, 850],
                     C: [2000 - 100, 850],
@@ -305,6 +326,13 @@ function primeAudioEngine() {
                     W: [10000 - 100, 850],
                 }
             });
+
+            // 错误处理
+            sprites.once("loaderror", (id, error) => {
+                console.error("Audio load error:", error);
+                resolve();  // 即使音频加载失败也继续游戏
+            });
+
             // Mute volume, play a sound, and then un-mute
             // to force audio engine to fully load the sprites.
             sprites.once("load", () => {
@@ -323,16 +351,30 @@ function primeAudioEngine() {
 
 function goto_game(callback) {
     hide_menu();
-    window.addEventListener("keypress", gameKeypress);
+    // 训练时隐藏计时器
+    var timerWidget = document.getElementById('timer-widget');
+    if (timerWidget) timerWidget.style.display = 'none';
+
+    window.removeEventListener("keydown", gameKeypress);
+    window.addEventListener("keydown", gameKeypress);
     document.getElementById('#play').style.display = 'none';
-    document.getElementById('thescreen').contentWindow.location.replace('/screens/game.html');
+    document.getElementById('thescreen').src = './screens/game.html';
     document.getElementById('thescreen').onload = function (e) {
-        get_screen().getElementById("title").textContent = `N = ${N}`;
+        // 检查页面是否仍是游戏页面
+        var titleEl = get_screen().getElementById("title");
+        if (!titleEl) return;  // 页面已切换
+
+        titleEl.textContent = `N = ${N}`;
         replaceEventListener(get_screen().getElementById("vis_button"), clickEvnt, function (e) { eyeButtonPress(); });
         replaceEventListener(get_screen().getElementById("letter_button"), clickEvnt, function (e) { soundButtonPress(); });
         replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) {
+            console.log("Game back button clicked");
+            if (myInterval > 0) clearInterval(myInterval);
+            myInterval = 0;
+            gameInputActive = false;
+            window.removeEventListener("keydown", gameKeypress);
             _paq.push(['trackEvent', 'Game', 'Exit', N]);
-            window.history.back();
+            goto_home();
         });
 
         // Prime the audio engine before actually starting game play
@@ -343,9 +385,13 @@ function goto_game(callback) {
 function goto_score() {
     hide_menu();
     document.getElementById('#play').style.display = 'none';
-    document.getElementById('thescreen').contentWindow.location.replace('/screens/score.html');
+    // 游戏结束后显示计时器
+    var timerWidget = document.getElementById('timer-widget');
+    if (timerWidget) timerWidget.style.display = 'block';
+
+    document.getElementById('thescreen').src = './screens/score.html';
     document.getElementById('thescreen').onload = function (e) {
-        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) { window.history.back(); });
+        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) { goto_home(); });
         replaceEventListener(get_screen().getElementById("#play"), clickEvnt, function (e) { startGame(true); });
 
         get_screen().getElementById("vis_hits").textContent = "" + vis_hits;
@@ -388,21 +434,22 @@ function goto_score() {
 function goto_stats() {
     hide_menu();
     document.getElementById('#play').style.display = 'none';
-    document.getElementById('thescreen').contentWindow.location.replace('/screens/stats.html');
+    document.getElementById('thescreen').src = './screens/stats.html';
     document.getElementById('thescreen').onload = function (e) {
-        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) { window.history.back(); });
+        replaceEventListener(get_screen().getElementById("#back"), clickEvnt, function (e) { goto_home(); });
     }
 }
 
 function goto_config() {
-    document.getElementById('themenu').contentWindow.location.replace('/screens/config.html');
+    document.getElementById('themenu').src = './screens/config.html';
     document.getElementById('themenu').onload = function (e) {
         replaceEventListener(get_menu().getElementById("#download_stats"), clickEvnt, downloadStats);
         replaceEventListener(get_menu().getElementById("#level_down"), clickEvnt, level_down);
         replaceEventListener(get_menu().getElementById("#level_up"), clickEvnt, level_up);
         replaceEventListener(get_menu().getElementById("#clear_storage"), clickEvnt, clearStorageButtonClick);
         replaceEventListener(get_menu().getElementById("#upload_stats"), "change", uploadConfig);
-        replaceEventListener(get_menu().getElementById("#back"), clickEvnt, go_back);
+        // 不再使用 replaceEventListener 处理 #back，避免 cloner 副作用
+        // 返回按钮的处理已在 config.html 中通过内联 onclick 完成
         replaceEventListener(get_menu().getElementById("reset_n"), clickEvnt, toggle_reset_n);
         replaceEventListener(get_menu().getElementById("lock_n"), clickEvnt, toggle_lock_n);
         setToggleState(get_menu().getElementById("reset_n"), cfg["reset_n"]);
@@ -413,31 +460,47 @@ function goto_config() {
 }
 
 function show_menu() {
-    document.getElementById('shader').style.opacity = '0.5';
+    var shader = document.getElementById('shader');
+    shader.style.opacity = '0.5';
+    shader.style.pointerEvents = 'auto';  // 启用点击
     document.getElementById('themenu').style.width = '60%';
 }
 
 function hide_menu() {
-    document.getElementById('shader').style.opacity = '0';
+    var shader = document.getElementById('shader');
+    shader.style.opacity = '0';
+    shader.style.pointerEvents = 'none';  // 禁用点击
     document.getElementById('themenu').style.width = '0';
-    window.removeEventListener("keypress", gameKeypress);
+    gameInputActive = false;
+    window.removeEventListener("keydown", gameKeypress);
+}
+
+// 设置页面的返回按钮 - 只关闭侧边栏，不导航
+function go_back(e) {
+    console.log("go_back called - hiding menu only");
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    hide_menu();
+    return false;
 }
 
 function toggle_reset_n() {
     cfg["reset_n"] = !cfg["reset_n"];
     setToggleState(get_menu().getElementById("reset_n"), cfg["reset_n"]);
-    localStorage.setItem('config', JSON.stringify(cfg));
+    AppStorage.setConfig(cfg);
 }
 
 function toggle_lock_n() {
     cfg["lock_n"] = !cfg["lock_n"];
     setToggleState(get_menu().getElementById("lock_n"), cfg["lock_n"]);
-    localStorage.setItem('config', JSON.stringify(cfg));
+    AppStorage.setConfig(cfg);
 }
 
 function set_n(new_level) {
     N = Math.max(1, new_level);
-    localStorage.setItem("N", N);
+    AppStorage.setN(N);
     get_menu().getElementById("#level_num").innerText = `${N}`;
 }
 
@@ -477,11 +540,16 @@ function uploadConfig(event) {
         if (f) {
             let r = new FileReader();
             r.addEventListener("load", function (event) {
-                let asjson = JSON.parse(event.target.result);
-                stats = asjson["stats"];
-                N = asjson["N"];
-                localStorage.setItem("stats", JSON.stringify(stats));
-                localStorage.setItem("N", N);
+                try {
+                    let asjson = JSON.parse(event.target.result);
+                    stats = normalizeStats(asjson["stats"]);
+                    N = normalizeLevel(asjson["N"]);
+                    AppStorage.setStats(stats);
+                    AppStorage.setN(N);
+                    goto_home();
+                } catch (error) {
+                    alert('备份文件格式无效，未恢复数据。');
+                }
             });
             r.readAsText(f);
         }
@@ -492,8 +560,7 @@ function uploadConfig(event) {
 
 function doClearStorage() {
     try {
-        localStorage.removeItem("stats");
-        localStorage.removeItem('config');
+        AppStorage.clearAll();
     } catch (err) { }
     cfg = { "reset_n": false, "lock_n": false };
     stats = { "games": [] };
@@ -503,8 +570,10 @@ function doClearStorage() {
 function clearStorageButtonClick() {
     if (confirm('确定要清除所有应用数据吗？')) {
         let elm = cloner(get_menu().getElementById('#clear_storage'));
-        elm.style.webkitAnimationPlayState = 'running';
-        elm.style.animationPlayState = 'running';
+        if (elm) {
+            elm.style.webkitAnimationPlayState = 'running';
+            elm.style.animationPlayState = 'running';
+        }
         doClearStorage();
     }
 }
@@ -512,23 +581,32 @@ function clearStorageButtonClick() {
 function setActiveBox(box) {
     if (box >= 0 && box < 8) {
         let elm = cloner(get_screen().getElementsByClassName('box')[box]);
+        if (!elm) return;
         elm.style.webkitAnimationPlayState = 'running';
         elm.style.animationPlayState = 'running';
     }
 }
 
 function eyeButtonPress() {
+    if (!gameInputActive || time <= 0) return;
+    var step = time - 1;
+    if (vis_clicks.indexOf(step) !== -1) return;
     let delay = Date.now() - timestep_start;
     vis_delays.push(delay);
-    vis_clicks.push(time - 1);
-    get_screen().getElementById('vis_button').style.backgroundColor = '#609f9f';
+    vis_clicks.push(step);
+    var button = get_screen().getElementById('vis_button');
+    if (button) button.style.backgroundColor = '#609f9f';
 }
 
 function soundButtonPress() {
+    if (!gameInputActive || time <= 0) return;
+    var step = time - 1;
+    if (letter_clicks.indexOf(step) !== -1) return;
     let delay = Date.now() - timestep_start;
     letter_delays.push(delay);
-    letter_clicks.push(time - 1);
-    get_screen().getElementById('letter_button').style.backgroundColor = '#609f9f';
+    letter_clicks.push(step);
+    var button = get_screen().getElementById('letter_button');
+    if (button) button.style.backgroundColor = '#609f9f';
 }
 
 function updateStats() {
@@ -539,7 +617,7 @@ function updateStats() {
         "v": 1.0
     };
     stats["games"].push(entry);
-    localStorage.setItem("stats", JSON.stringify(stats));
+    AppStorage.setStats(stats);
 }
 
 function calculateScore() {
@@ -604,29 +682,42 @@ function calculateScore() {
 }
 
 function playLetter(idx) {
-    sprites.play(LETTERS[idx])
+    if (sprites && LETTERS[idx]) sprites.play(LETTERS[idx]);
 }
 
 function doTimestep() {
-    get_screen().getElementById('vis_button').style.backgroundColor = '#d9d9d9';
-    get_screen().getElementById('letter_button').style.backgroundColor = '#d9d9d9';
+    // 检查游戏界面元素是否存在
+    var visButton = get_screen().getElementById('vis_button');
+    var letterButton = get_screen().getElementById('letter_button');
+    if (!visButton || !letterButton) {
+        // 游戏界面已不存在，停止计时器
+        if (myInterval > 0) clearInterval(myInterval);
+        myInterval = 0;
+        gameInputActive = false;
+        return;
+    }
+    visButton.style.backgroundColor = '#d9d9d9';
+    letterButton.style.backgroundColor = '#d9d9d9';
     if (time < vis_stack.length) {
         let letter_idx = letter_stack[time];
         let box_idx = vis_stack[time];
         console.log(`${time}: ${LETTERS[letter_idx]} / ${box_idx}`);
 
         timestep_start = Date.now();
+        gameInputActive = true;
         setActiveBox(box_idx);
         playLetter(letter_idx);
         time += 1;
     } else {
         setActiveBox(-1);
         clearInterval(myInterval);
+        gameInputActive = false;
+        window.removeEventListener("keydown", gameKeypress);
         updateStats();
         // 如果未锁定N等级，则根据表现调整
         if (!cfg["lock_n"]) {
             N = Math.max(1, N + calculateScore());
-            localStorage.setItem("N", N);
+            AppStorage.setN(N);
         }
         // show score
         window.history.replaceState({ 'page': 'score' }, '', '');
@@ -725,6 +816,7 @@ function startGame(isRestart) {
     vis_delays = [];
     letter_delays = [];
     time = 0;
+    gameInputActive = false;
     goto_game(function () {
         // Start game
         myInterval = setInterval(doTimestep, iFrequency);  // run
@@ -743,15 +835,13 @@ window.onpopstate = function (event) {
         goto_stats();
 };
 
-window.addEventListener("load", function () {
-    try { stats = JSON.parse(localStorage.getItem("stats")); } catch (err) { }
-    try { N = parseInt(localStorage.getItem("N")); } catch (err) { }
-    try { cfg = JSON.parse(localStorage.getItem("config")); } catch (err) { }
+window.addEventListener("load", async function () {
+    // 使用存储适配器（支持 Electron 文件存储和 localStorage）
+    await AppStorage.init();
 
-    if (!stats) stats = { 'games': [] };
-    if (!N) N = 1;
-    if (!cfg) cfg = { 'reset_n': false, 'lock_n': false };
-    if (cfg['lock_n'] === undefined) cfg['lock_n'] = false;
+    stats = normalizeStats(AppStorage.getStats());
+    N = normalizeLevel(AppStorage.getN());
+    cfg = normalizeConfig(AppStorage.getConfig());
 
     if (stats['games'].length > 0) {
         let latest_game = stats['games'][stats['games'].length - 1];
@@ -759,6 +849,13 @@ window.addEventListener("load", function () {
             N = 1;
         }
     }
+
+    // 点击遮罩层关闭设置侧边栏
+    document.getElementById('shader').addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        hide_menu();
+    });
 
     window.history.pushState({ 'page': 'home' }, '', '');
     goto_home();
