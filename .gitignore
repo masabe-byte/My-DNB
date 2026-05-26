@@ -5,3 +5,5 @@ src-tauri/gen/
 data/
 *.log
 *.tmp
+/icon.ico
+/icon1.ico
