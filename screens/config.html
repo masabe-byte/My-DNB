@@ -4,7 +4,7 @@
 <head>
     <meta charset='utf-8' />
     <meta name="theme-color" content="#FFFFFF" />
-    <link rel='stylesheet' type='text/css' href='/styles/default.css' media='screen' />
+    <link rel='stylesheet' type='text/css' href='../styles/default.css' media='screen' />
     <style>
         body {
             font-family: 'Consolas', 'Monaco', monospace;
@@ -168,6 +168,21 @@
             </div>
         </div>
     </div>
+    <script>
+        var backBtn = document.getElementById('#back');
+        if (backBtn) {
+            // 使用 capture 阶段确保首先处理事件
+            backBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                if (parent && parent.hide_menu) {
+                    parent.hide_menu();
+                }
+                return false;
+            }, true);  // capture = true
+        }
+    </script>
 </body>
 
 </html>
